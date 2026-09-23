@@ -1,0 +1,35 @@
+# dependencies
+/node_modules
+/.pnpm-store/
+/.pnp
+.pnp.*
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# existing local scratch artifacts
+/tmp/
+
+# local environment files
+.env
+.env.local
+.env.*.local
+
+# test output
+/coverage/
+/test-results/
+/playwright-report/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
