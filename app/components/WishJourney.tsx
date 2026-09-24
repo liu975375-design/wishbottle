@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 
+import {
+  getDateInTimeZone,
+  getTomorrowInTimeZone,
+} from "@/lib/wish-journey";
+
 import { StepIndicator } from "./StepIndicator";
 import { WishBottleIllustration } from "./WishBottleIllustration";
 import { WishConfirmation } from "./WishConfirmation";
@@ -10,10 +15,19 @@ import { WishConfirmation } from "./WishConfirmation";
 type Step = 1 | 2 | 3 | 4 | 5;
 type ContactChoice = "" | "own_email" | "parent_carer_email" | "no_email";
 
+type EmailVerificationSummary = {
+  required: boolean;
+  verified: boolean;
+  sent: boolean;
+  cooldown: boolean;
+};
+
 type CreateSuccess = {
   wishCode: string;
   wishContent: string;
   createdAt: string;
+  contactEmail: string | null;
+  emailVerification: EmailVerificationSummary;
 };
 
 type ApiPayload = {
@@ -21,7 +35,23 @@ type ApiPayload = {
   wishCode?: unknown;
   wishContent?: unknown;
   createdAt?: unknown;
+  emailVerification?: unknown;
 };
+
+function parseEmailVerification(value: unknown): EmailVerificationSummary {
+  if (typeof value !== "object" || value === null) {
+    return { required: false, verified: false, sent: false, cooldown: false };
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return {
+    required: record.required === true,
+    verified: record.verified === true,
+    sent: record.sent === true,
+    cooldown: record.cooldown === true,
+  };
+}
 
 const TOTAL_STEPS = 5;
 const WISH_LIMIT = 200;
@@ -67,15 +97,32 @@ export function WishJourney() {
   const [contactChoice, setContactChoice] = useState<ContactChoice>("");
   const [contactEmail, setContactEmail] = useState("");
   const [reminderChoices, setReminderChoices] = useState<number[]>([]);
+  const [customReminderEnabled, setCustomReminderEnabled] = useState(false);
+  const [customReminderDate, setCustomReminderDate] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<CreateSuccess | null>(null);
+  const [isResendingVerification, setIsResendingVerification] =
+    useState(false);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null,
+  );
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
   const submittingRef = useRef(false);
+  const resendVerificationRef = useRef(false);
+  const verificationPinRef = useRef<string | null>(null);
   const idempotencyKeyRef = useRef(createIdempotencyKey());
 
 
-  const reminderText = reminderChoices
-    .map((months) => REMINDER_LABELS[months])
+  const reminderText = [
+    ...reminderChoices.map((months) => REMINDER_LABELS[months]),
+    customReminderEnabled && customReminderDate
+      ? `Custom Date: ${customReminderDate}`
+      : null,
+  ]
+    .filter((value): value is string => Boolean(value))
     .join(", ");
 
   function updatePin(
@@ -101,7 +148,12 @@ export function WishJourney() {
     setContactChoice("");
     setContactEmail("");
     setReminderChoices([]);
+    setCustomReminderEnabled(false);
+    setCustomReminderDate("");
     idempotencyKeyRef.current = createIdempotencyKey();
+    verificationPinRef.current = null;
+    setVerificationMessage(null);
+    setVerificationError(null);
     setError(null);
     setSuccess(null);
   }
@@ -112,6 +164,14 @@ export function WishJourney() {
         ? current.filter((value) => value !== months)
         : [...current, months].sort((left, right) => left - right),
     );
+  }
+
+  function toggleCustomReminder(enabled: boolean): void {
+    setCustomReminderEnabled(enabled);
+
+    if (!enabled) {
+      setCustomReminderDate("");
+    }
   }
 
   function validateContactStep(): string | null {
@@ -127,15 +187,97 @@ export function WishJourney() {
       return "Enter a valid email address.";
     }
 
-    if (reminderChoices.length === 0) {
-      return "Choose at least one reminder.";
+    if (reminderChoices.length === 0 && !customReminderEnabled) {
+      return "Choose at least one reminder or a Custom Date.";
+    }
+
+    if (
+      customReminderEnabled &&
+      (!customReminderDate || customReminderDate <= getDateInTimeZone())
+    ) {
+      return "Custom Date must be in the future.";
     }
 
 
     return null;
   }
 
-  async function createWish() {
+
+  async function resendVerificationEmail() {
+    if (resendVerificationRef.current || !success || !verificationPinRef.current) {
+      return;
+    }
+
+    resendVerificationRef.current = true;
+    setIsResendingVerification(true);
+    setVerificationMessage(null);
+    setVerificationError(null);
+
+    try {
+      const response = await fetch("/api/email-verification/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wishCode: success.wishCode,
+          pin: verificationPinRef.current,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: unknown;
+        alreadyVerified?: unknown;
+        cooldown?: unknown;
+      } | null;
+
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === "string"
+            ? payload.error
+            : "Unable to resend the verification email.",
+        );
+      }
+
+      if (payload?.alreadyVerified === true) {
+        setSuccess((current) =>
+          current
+            ? {
+                ...current,
+                emailVerification: {
+                  ...current.emailVerification,
+                  verified: true,
+                },
+              }
+            : current,
+        );
+        setVerificationMessage("This email is already verified.");
+      } else {
+        setSuccess((current) =>
+          current
+            ? {
+                ...current,
+                emailVerification: {
+                  ...current.emailVerification,
+                  sent: true,
+                },
+              }
+            : current,
+        );
+        setVerificationMessage(
+          payload?.cooldown === true
+            ? "A verification email was already sent recently."
+            : "Verification email sent.",
+        );
+      }
+    } catch (resendError) {
+      setVerificationError(
+        resendError instanceof Error
+          ? resendError.message
+          : "Unable to resend the verification email.",
+      );
+    } finally {
+      resendVerificationRef.current = false;
+      setIsResendingVerification(false);
+    }
+  }  async function createWish() {
     if (submittingRef.current) {
       return;
     }
@@ -160,6 +302,9 @@ export function WishJourney() {
           contactEmail:
             contactChoice === "no_email" ? null : contactEmail.trim(),
           reminders: reminderChoices,
+          customReminderDate: customReminderEnabled
+            ? customReminderDate
+            : null,
         }),
       });
 
@@ -184,10 +329,20 @@ export function WishJourney() {
         throw new Error("The wish was saved, but the response was incomplete.");
       }
 
+      const emailVerification = parseEmailVerification(
+        payload.emailVerification,
+      );
+      const submittedContactEmail =
+        contactChoice === "no_email" ? null : contactEmail.trim();
+
+      verificationPinRef.current =
+        emailVerification.required && !emailVerification.verified ? pin : null;
       setSuccess({
         wishCode: payload.wishCode,
         wishContent: payload.wishContent,
         createdAt: payload.createdAt,
+        contactEmail: submittedContactEmail,
+        emailVerification,
       });
       setPin("");
       setConfirmPin("");
@@ -230,13 +385,23 @@ export function WishJourney() {
     }
 
     if (step === 3) {
+      if (pin.length < 4) {
+        setError("PIN must be at least 4 digits.");
+        return;
+      }
+
+      if (pin.length > 6) {
+        setError("PIN must be no more than 6 digits.");
+        return;
+      }
+
       if (!PIN_PATTERN.test(pin)) {
-        setError("PIN must be 4 to 6 digits.");
+        setError("PIN must contain numbers only.");
         return;
       }
 
       if (pin !== confirmPin) {
-        setError("PIN and Confirm PIN must match.");
+        setError("PIN and Confirm PIN do not match.");
         return;
       }
 
@@ -261,10 +426,17 @@ export function WishJourney() {
       <div className="journey-shell">
         <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} />
         <WishConfirmation
+          contactEmail={success.contactEmail}
+          contactType={contactChoice}
           createdAt={success.createdAt}
+          emailVerification={success.emailVerification}
+          isResendingVerification={isResendingVerification}
           name={name}
+          onResendVerification={resendVerificationEmail}
           onReset={resetJourney}
           reminder={reminderText}
+          verificationError={verificationError}
+          verificationMessage={verificationMessage}
           wishCode={success.wishCode}
         />
       </div>
@@ -352,8 +524,7 @@ export function WishJourney() {
             <p className="eyebrow">Your PIN</p>
             <h1>Create your PIN</h1>
             <p className="journey-lede">
-              You&apos;ll need your PIN with your Wish Code to find your wish
-              later.
+              Use 4–6 digits. Remember this PIN. You will need it to find your wish later.
             </p>
 
             <div className="field">
@@ -396,7 +567,9 @@ export function WishJourney() {
                 type="password"
                 value={confirmPin}
               />
-              <p className="hint">Keep your PIN somewhere safe.</p>
+              <p className="hint">
+                Keep this PIN somewhere safe so you can find your wish later.
+              </p>
             </div>
           </section>
         ) : null}
@@ -499,9 +672,40 @@ export function WishJourney() {
                   </label>
                 ))}
 
+                <label
+                  className={`reminder-chip ${customReminderEnabled ? "is-selected" : ""}`}
+                >
+                  <input
+                    checked={customReminderEnabled}
+                    name="customReminder"
+                    onChange={(event) =>
+                      toggleCustomReminder(event.target.checked)
+                    }
+                    type="checkbox"
+                  />
+                  Custom Date
+                </label>
               </div>
 
-
+              {customReminderEnabled ? (
+                <div className="field custom-date-field">
+                  <label className="label" htmlFor="custom-reminder-date">
+                    Remind me on
+                  </label>
+                  <input
+                    className="input"
+                    id="custom-reminder-date"
+                    min={getTomorrowInTimeZone()}
+                    name="customReminderDate"
+                    onChange={(event) =>
+                      setCustomReminderDate(event.target.value)
+                    }
+                    required
+                    type="date"
+                    value={customReminderDate}
+                  />
+                </div>
+              ) : null}
             </div>
           </section>
         ) : null}
@@ -539,16 +743,6 @@ export function WishJourney() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

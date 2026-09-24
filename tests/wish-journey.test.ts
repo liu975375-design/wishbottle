@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   calculateNextReminderSchedule,
   calculateReminderDate,
+  getDateInTimeZone,
+  londonDateAtNineToUtc,
   validateWishJourneyInput,
 } from "../lib/wish-journey";
 
@@ -78,7 +80,7 @@ describe("Release 2 Wish Journey validation", () => {
       ),
     ).toEqual({
       ok: false,
-      error: "Choose at least one reminder: 1, 3, 6, or 12 months.",
+      error: "Choose at least one reminder or a Custom Date.",
     });
   });
 
@@ -225,7 +227,96 @@ describe("Release 2 Wish Journey validation", () => {
 
     expect(nextReminder.reminderDate).toBe("2026-12-22");
   });
-});
+
+  it("accepts a Custom Date only reminder", () => {
+    const result = validateWishJourneyInput(
+      {
+        wishContent: "A future wish",
+        idempotencyKey: IDEMPOTENCY_KEY,
+        name: "Mary",
+        contactType: "no_email",
+        contactEmail: null,
+        reminders: [],
+        customReminderDate: "2027-09-25",
+      },
+      BASE_DATE,
+    );
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.reminders).toEqual([
+        {
+          months: 0,
+          reminderDate: "2027-09-25",
+          scheduledAt: "2027-09-25T08:00:00.000Z",
+        },
+      ]);
+    }
+  });
+
+  it("supports month reminders and a Custom Date together", () => {
+    const result = validateWishJourneyInput(
+      {
+        wishContent: "A future wish",
+        idempotencyKey: IDEMPOTENCY_KEY,
+        name: "Mary",
+        contactType: "no_email",
+        contactEmail: null,
+        reminders: [1],
+        customReminderDate: "2030-01-01",
+      },
+      BASE_DATE,
+    );
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.reminders).toHaveLength(2);
+      expect(result.data.reminders.map((item) => item.months)).toEqual([1, 0]);
+      expect(result.data.reminders[1]).toMatchObject({
+        reminderDate: "2030-01-01",
+      });
+    }
+  });
+
+  it("rejects today, past, and invalid Custom Dates", () => {
+    for (const customReminderDate of [
+      "2026-01-31",
+      "2026-01-30",
+      "2026-02-30",
+    ]) {
+      expect(
+        validateWishJourneyInput(
+          {
+            wishContent: "A future wish",
+            idempotencyKey: IDEMPOTENCY_KEY,
+            name: "Mary",
+            contactType: "no_email",
+            contactEmail: null,
+            reminders: [],
+            customReminderDate,
+          },
+          BASE_DATE,
+        ),
+      ).toEqual({
+        ok: false,
+        error: "Custom Date must be a valid future date.",
+      });
+    }
+  });
+
+  it("converts Europe/London 09:00 to the correct UTC time", () => {
+    expect(londonDateAtNineToUtc("2027-01-15")).toBe(
+      "2027-01-15T09:00:00.000Z",
+    );
+    expect(londonDateAtNineToUtc("2027-07-15")).toBe(
+      "2027-07-15T08:00:00.000Z",
+    );
+    expect(getDateInTimeZone(BASE_DATE)).toBe("2026-01-31");
+  });});
+
+
 
 
 

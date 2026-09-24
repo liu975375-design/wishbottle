@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+import {
+  getVerifiedEmailAt,
+  sendVerificationForWish,
+  type EmailVerificationResult,
+} from "@/lib/email-verification-service";
 import { hashPin } from "@/lib/pin";
 import {
   getSupabaseAdmin,
@@ -64,6 +69,9 @@ export async function POST(request: Request) {
     const pinHash = await hashPin(validation.data.pin);
     const baseCode = generateWishCodeBase(journeyValidation.data.name);
     const supabase = getSupabaseAdmin();
+    const emailVerifiedAt = journeyValidation.data.contactEmail
+      ? await getVerifiedEmailAt(journeyValidation.data.contactEmail)
+      : null;
 
     for (let attempt = 1; attempt <= WISH_CODE_MAX_ATTEMPTS; attempt += 1) {
       const wishCode = wishCodeForAttempt(baseCode, attempt);
@@ -77,6 +85,7 @@ export async function POST(request: Request) {
         p_contact_email: journeyValidation.data.contactEmail,
         p_legacy_reminder_date: journeyValidation.data.legacyReminderDate,
         p_reminders: journeyValidation.data.reminders,
+        p_email_verified_at: emailVerifiedAt,
       });
 
       if (!error && data) {
@@ -92,12 +101,32 @@ export async function POST(request: Request) {
           );
         }
 
+        let emailVerification: EmailVerificationResult = {
+          required: false,
+          verified: false,
+          sent: false,
+          cooldown: false,
+        };
+
+        if (journeyValidation.data.contactEmail) {
+          try {
+            emailVerification = await sendVerificationForWish({
+              wishId: created.id,
+              email: journeyValidation.data.contactEmail,
+              name: journeyValidation.data.name,
+            });
+          } catch (verificationError) {
+            console.error("Failed to send email verification:", verificationError);
+          }
+        }
+
         return NextResponse.json(
           {
             wishCode: created.wish_code,
             wishContent: created.wish_content,
             createdAt: created.created_at,
             reminderCount: journeyValidation.data.reminders.length,
+            emailVerification,
           },
           { status: 201 },
         );
@@ -139,3 +168,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+

@@ -2,12 +2,26 @@ import Link from "next/link";
 
 import { WishBottleIllustration } from "./WishBottleIllustration";
 
+type EmailVerificationSummary = {
+  required: boolean;
+  verified: boolean;
+  sent: boolean;
+  cooldown: boolean;
+};
+
 type WishConfirmationProps = {
   name: string;
   wishCode: string;
   createdAt: string;
   reminder: string;
+  contactType: "" | "own_email" | "parent_carer_email" | "no_email";
+  contactEmail: string | null;
+  emailVerification: EmailVerificationSummary;
   onReset: () => void;
+  onResendVerification: () => void;
+  isResendingVerification: boolean;
+  verificationMessage: string | null;
+  verificationError: string | null;
 };
 
 export function WishConfirmation({
@@ -15,7 +29,14 @@ export function WishConfirmation({
   wishCode,
   createdAt,
   reminder,
+  contactType,
+  contactEmail,
+  emailVerification,
   onReset,
+  onResendVerification,
+  isResendingVerification,
+  verificationMessage,
+  verificationError,
 }: WishConfirmationProps) {
   const savedDate = new Date(createdAt).toLocaleDateString(undefined, {
     day: "numeric",
@@ -42,6 +63,50 @@ export function WishConfirmation({
           <output className="wish-code">{wishCode}</output>
           <span>Take a screenshot or write it down somewhere safe.</span>
         </div>
+
+        {contactType === "no_email" ? (
+          <p className="status status-error">
+            Without an email, we cannot help recover your PIN later.
+          </p>
+        ) : emailVerification.verified ? (
+          <p className="status status-success">
+            This email is already verified.
+          </p>
+        ) : emailVerification.sent ? (
+          <p className="status status-success">
+            We sent a verification link to {contactEmail}. Verify it to enable
+            reminders and PIN recovery.
+          </p>
+        ) : (
+          <p className="status status-error">
+            We could not send the verification email. You can try again below.
+          </p>
+        )}
+
+        {contactType !== "no_email" && !emailVerification.verified ? (
+          <button
+            className="button button-secondary"
+            disabled={isResendingVerification}
+            onClick={onResendVerification}
+            type="button"
+          >
+            {isResendingVerification
+              ? "Sending..."
+              : "Resend verification email"}
+          </button>
+        ) : null}
+
+        {verificationMessage ? (
+          <p className="status status-success" role="status">
+            {verificationMessage}
+          </p>
+        ) : null}
+
+        {verificationError ? (
+          <p className="status status-error" role="alert">
+            {verificationError}
+          </p>
+        ) : null}
 
         <dl className="confirmation-meta-grid">
           <div>
@@ -75,3 +140,4 @@ export function WishConfirmation({
     </section>
   );
 }
+

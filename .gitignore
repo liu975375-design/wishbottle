@@ -14,9 +14,8 @@ next-env.d.ts
 /tmp/
 
 # local environment files
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 
 # test output
 /coverage/
