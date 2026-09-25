@@ -9,7 +9,8 @@ import { validateFindWishInput } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
-const INVALID_LOOKUP_MESSAGE = "Wish Code or PIN is incorrect.";
+const WISH_NOT_FOUND_MESSAGE = "Wish not found. Please check your Wish Code.";
+const INCORRECT_PIN_MESSAGE = "Incorrect PIN. Please try again.";
 
 type FoundWish = {
   wish_code: string;
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: INVALID_LOOKUP_MESSAGE },
+      { error: WISH_NOT_FOUND_MESSAGE },
       { status: 400 },
     );
   }
@@ -33,7 +34,17 @@ export async function POST(request: Request) {
   const validation = validateFindWishInput(body);
 
   if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 400 });
+    const hasWishCode =
+      typeof body === "object" &&
+      body !== null &&
+      "wishCode" in body &&
+      typeof body.wishCode === "string" &&
+      body.wishCode.trim().length > 0;
+
+    return NextResponse.json(
+      { error: hasWishCode ? INCORRECT_PIN_MESSAGE : WISH_NOT_FOUND_MESSAGE },
+      { status: 400 },
+    );
   }
 
   try {
@@ -55,8 +66,8 @@ export async function POST(request: Request) {
 
     if (!data) {
       return NextResponse.json(
-        { error: INVALID_LOOKUP_MESSAGE },
-        { status: 401 },
+        { error: WISH_NOT_FOUND_MESSAGE },
+        { status: 404 },
       );
     }
 
@@ -64,7 +75,7 @@ export async function POST(request: Request) {
 
     if (!pinMatches) {
       return NextResponse.json(
-        { error: INVALID_LOOKUP_MESSAGE },
+        { error: INCORRECT_PIN_MESSAGE },
         { status: 401 },
       );
     }

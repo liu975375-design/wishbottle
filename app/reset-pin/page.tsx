@@ -8,10 +8,14 @@ export default async function ResetPinPage({
   searchParams,
 }: ResetPinPageProps) {
   const { result } = await searchParams;
+  const linkState =
+    result === "expired" || result === "used" || result === "invalid"
+      ? result
+      : "valid";
 
   return (
     <div className="journey-shell">
-      <ResetPinForm invalidLink={result === "invalid"} />
+      <ResetPinForm linkState={linkState} />
     </div>
   );
 }

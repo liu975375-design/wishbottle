@@ -1,4 +1,8 @@
-import type { ValidationResult } from "./validation";
+import {
+  MAX_ORIGINAL_WISH_LENGTH,
+  isValidEmail,
+  type ValidationResult,
+} from "./validation";
 
 export const CONTACT_TYPES = [
   "own_email",
@@ -8,7 +12,7 @@ export const CONTACT_TYPES = [
 
 export const REMINDER_MONTHS = [1, 3, 6, 12] as const;
 export const CUSTOM_REMINDER_MONTHS = 0 as const;
-export const MAX_WISH_CONTENT_LENGTH = 200;
+export const MAX_WISH_CONTENT_LENGTH = MAX_ORIGINAL_WISH_LENGTH;
 
 const LONDON_TIME_ZONE = "Europe/London";
 const LONDON_REMINDER_HOUR = 9;
@@ -44,7 +48,6 @@ export type WishJourneyInput = {
   legacyReminderDate: string;
 };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const IDEMPOTENCY_KEY_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -289,7 +292,7 @@ export function validateWishJourneyInput(
     return { ok: false, error: "Wish cannot be empty." };
   }
 
-  if (input.wishContent.trim().length > MAX_WISH_CONTENT_LENGTH) {
+  if (input.wishContent.length > MAX_WISH_CONTENT_LENGTH) {
     return {
       ok: false,
       error: `Wish must be ${MAX_WISH_CONTENT_LENGTH} characters or fewer.`,
@@ -331,7 +334,7 @@ export function validateWishJourneyInput(
 
     contactEmail = input.contactEmail.trim();
 
-    if (!EMAIL_PATTERN.test(contactEmail)) {
+    if (!isValidEmail(contactEmail)) {
       return { ok: false, error: "Enter a valid email address." };
     }
   }

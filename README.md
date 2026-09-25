@@ -5,9 +5,10 @@ WishBottle 是一个 mobile-first 的许愿网站。本仓库当前只实现 **R
 ```text
 Make a Wish
 → 输入 Wish
-→ 设置 4–6 位 PIN
 → Save
+→ 播放保存动画
 → 自动生成 Wish Code
+→ 设置 4 位 PIN
 → Find My Wish
 → Wish Code + PIN 找回 Wish
 ```
@@ -30,7 +31,7 @@ Make a Wish
 
 - Create Wish 表单
 - Wish 内容非空校验，并在判断前去除首尾空格
-- 4–6 位数字 PIN
+- 4 位数字 PIN
 - Confirm PIN
 - PIN scrypt hash + random salt
 - 自动生成 Wish Code
@@ -177,10 +178,9 @@ pnpm build
 2. 启动 `pnpm dev`。
 3. 打开 `http://localhost:3000/create`。
 4. 输入 Wish。
-5. 输入 4–6 位数字 PIN。
-6. 再次输入相同的 Confirm PIN。
-7. 点击 Save Wish。
-8. 成功后记录页面显示的 Wish Code。
+5. 点击 Save Wish 并等待保存动画完成。
+6. 记录页面显示的 Wish Code。
+7. 输入并确认相同的 4 位 PIN。
 9. 打开 `http://localhost:3000/find`。
 10. 输入 Wish Code 和正确 PIN。
 11. 应显示刚保存的 Wish 内容。
@@ -224,12 +224,30 @@ Content-Type: application/json
 
 {
   "wishContent": "A peaceful year",
+  "name": "Mary",
+  "contactType": "own_email",
+  "contactEmail": "mary@example.com",
+  "reminders": [6]
+}
+```
+
+成功响应返回 Wish Code、Wish 内容、创建时间和一次性 `pinSetupToken`。服务端使用高熵临时凭据写入占位 `pin_hash`，该凭据不能作为正式 PIN 使用。
+
+### 设置 Wish PIN
+
+```text
+POST /api/wishes/pin
+Content-Type: application/json
+
+{
+  "wishCode": "MARY22092026",
+  "setupToken": "one-time-token",
   "pin": "4827",
   "confirmPin": "4827"
 }
 ```
 
-成功响应只返回 Wish Code、Wish 内容和创建时间，不返回 PIN 或 `pin_hash`。
+该接口验证一次性 setup token 后，以 scrypt hash 替换临时 PIN。正式 PIN 固定为 4 位数字。Wish 找不到、token 失效或已被使用时返回统一错误。
 
 ### 找回 Wish
 

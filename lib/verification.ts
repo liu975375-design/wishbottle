@@ -9,6 +9,17 @@ export class VerificationConfigurationError extends Error {
   }
 }
 
+export type EmailVerificationTokenState =
+  | "valid"
+  | "expired"
+  | "used"
+  | "invalid";
+
+type StoredEmailVerificationToken = {
+  expires_at: string;
+  used_at: string | null;
+};
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -63,6 +74,27 @@ export function getPinResetResendSeconds(): number {
 
 export function getEmailVerificationUrl(token: string): string {
   return `${getAppBaseUrl()}/verify-email/${token}`;
+}
+
+export function getEmailVerificationTokenState(
+  token: StoredEmailVerificationToken | null | undefined,
+  now = new Date(),
+): EmailVerificationTokenState {
+  if (!token) {
+    return "invalid";
+  }
+
+  if (token.used_at) {
+    return "used";
+  }
+
+  const expiresAt = Date.parse(token.expires_at);
+
+  if (!Number.isFinite(expiresAt) || expiresAt <= now.getTime()) {
+    return "expired";
+  }
+
+  return "valid";
 }
 
 export function getPinResetUrl(token: string): string {

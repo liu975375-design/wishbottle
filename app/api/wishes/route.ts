@@ -1,11 +1,13 @@
+import { randomBytes } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import {
-  getVerifiedEmailAt,
+  failedEmailVerificationResult,
   sendVerificationForWish,
   type EmailVerificationResult,
 } from "@/lib/email-verification-service";
-import { hashPin } from "@/lib/pin";
+import { hashPin, hashPinSetupToken } from "@/lib/pin";
 import {
   getSupabaseAdmin,
   MissingSupabaseConfigError,
@@ -66,12 +68,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const pinHash = await hashPin(validation.data.pin);
+    const pinSetupToken = validation.data.pin
+      ? null
+      : randomBytes(32).toString("base64url");
+    const pinHash = validation.data.pin
+      ? await hashPin(validation.data.pin)
+      : await hashPinSetupToken(pinSetupToken!);
     const baseCode = generateWishCodeBase(journeyValidation.data.name);
     const supabase = getSupabaseAdmin();
-    const emailVerifiedAt = journeyValidation.data.contactEmail
-      ? await getVerifiedEmailAt(journeyValidation.data.contactEmail)
-      : null;
 
     for (let attempt = 1; attempt <= WISH_CODE_MAX_ATTEMPTS; attempt += 1) {
       const wishCode = wishCodeForAttempt(baseCode, attempt);
@@ -85,7 +89,6 @@ export async function POST(request: Request) {
         p_contact_email: journeyValidation.data.contactEmail,
         p_legacy_reminder_date: journeyValidation.data.legacyReminderDate,
         p_reminders: journeyValidation.data.reminders,
-        p_email_verified_at: emailVerifiedAt,
       });
 
       if (!error && data) {
@@ -103,29 +106,39 @@ export async function POST(request: Request) {
 
         let emailVerification: EmailVerificationResult = {
           required: false,
+          status: "not_required",
           verified: false,
           sent: false,
           cooldown: false,
+          retryable: false,
         };
 
         if (journeyValidation.data.contactEmail) {
           try {
             emailVerification = await sendVerificationForWish({
+              apiRoute: "/api/wishes",
               wishId: created.id,
               email: journeyValidation.data.contactEmail,
               name: journeyValidation.data.name,
             });
-          } catch (verificationError) {
-            console.error("Failed to send email verification:", verificationError);
+          } catch {
+            emailVerification = failedEmailVerificationResult();
           }
         }
 
         return NextResponse.json(
           {
+            success: true,
+            wishSaved: true,
+            reminderScheduled: true,
             wishCode: created.wish_code,
             wishContent: created.wish_content,
             createdAt: created.created_at,
+            pinSetupToken,
             reminderCount: journeyValidation.data.reminders.length,
+            reminderDates: journeyValidation.data.reminders.map(
+              (reminder) => reminder.reminderDate,
+            ),
             emailVerification,
           },
           { status: 201 },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { hashPin } from "@/lib/pin";
 import { getCurrentPinResetSession } from "@/lib/pin-reset-auth";
+import { getPinResetTokenState } from "@/lib/pin-reset";
 import { PIN_RESET_SESSION_COOKIE } from "@/lib/pin-reset-session";
 import {
   getSupabaseAdmin,
@@ -49,14 +50,14 @@ export async function POST(request: Request) {
 
   if (!isValidPin(newPin)) {
     return NextResponse.json(
-      { error: "PIN must be 4 to 6 digits." },
+      { error: "PIN must be exactly 4 digits." },
       { status: 400 },
     );
   }
 
   if (newPin !== confirmPin) {
     return NextResponse.json(
-      { error: "PIN and Confirm PIN must match." },
+      { error: "PINs do not match." },
       { status: 400 },
     );
   }
@@ -79,8 +80,48 @@ export async function POST(request: Request) {
     }
 
     if (!data) {
+      const { data: tokenRecord, error: tokenLookupError } = await supabase
+        .from("pin_reset_tokens")
+        .select("expires_at, used_at")
+        .eq("wish_id", session.wishId)
+        .eq("token_hash", session.tokenHash)
+        .maybeSingle<{ expires_at: string; used_at: string | null }>();
+
+      if (tokenLookupError) {
+        console.error("[PIN Reset] Failed to classify invalid reset token", {
+          route: "/api/pin-reset/complete",
+          wishId: session.wishId,
+          errorCode: tokenLookupError.code ?? null,
+          errorMessage: tokenLookupError.message,
+          timestamp: new Date().toISOString(),
+        });
+        return NextResponse.json(
+          { error: "Unable to reset your PIN right now." },
+          { status: 503 },
+        );
+      }
+
+      const tokenState = getPinResetTokenState(tokenRecord);
+
+      if (tokenState === "used") {
+        return NextResponse.json(
+          {
+            error:
+              "This reset link has already been used. Please request a new one if you still need to reset your PIN.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (tokenState === "expired") {
+        return NextResponse.json(
+          { error: "This reset link has expired. Please request a new one." },
+          { status: 400 },
+        );
+      }
+
       return NextResponse.json(
-        { error: "This PIN reset link has expired or already been used." },
+        { error: "This reset link is not valid." },
         { status: 400 },
       );
     }

@@ -1,21 +1,31 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 
 import { FindWishForm } from "@/app/components/FindWishForm";
 
-export default function FindWishPage() {
+export const metadata: Metadata = {
+  title: "Find My Wish | WishBottle",
+};
+
+type FindWishPageProps = {
+  searchParams: Promise<{ wishCode?: string }>;
+};
+
+export default async function FindWishPage({
+  searchParams,
+}: FindWishPageProps) {
+  const { wishCode = "" } = await searchParams;
+
   return (
-    <div className="find-page-shell">
-      <Link className="back-link" href="/">
-        Back to WishBottle
-      </Link>
-      <section className="find-heading">
-        <p className="eyebrow">Find My Wish</p>
-        <h1>Find your wish</h1>
-        <p className="journey-lede">
-          Enter your Wish Code and PIN to find it again.
+    <div className="content-page find-page-shell">
+      <header className="centered-page-heading">
+        <h1>Find My Wish</h1>
+        <p>
+          Enter your Wish Code and PIN
+          <br />
+          to open your wish.
         </p>
-      </section>
-      <FindWishForm />
+      </header>
+      <FindWishForm initialWishCode={wishCode} />
     </div>
   );
 }

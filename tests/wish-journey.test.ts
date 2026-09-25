@@ -165,7 +165,7 @@ describe("Release 2 Wish Journey validation", () => {
     expect(
       validateWishJourneyInput(
         {
-          wishContent: "x".repeat(201),
+          wishContent: "x".repeat(81),
           idempotencyKey: IDEMPOTENCY_KEY,
           name: "Alex",
           contactType: "no_email",
@@ -176,7 +176,7 @@ describe("Release 2 Wish Journey validation", () => {
       ),
     ).toEqual({
       ok: false,
-      error: "Wish must be 200 characters or fewer.",
+      error: "Wish must be 80 characters or fewer.",
     });
 
     expect(

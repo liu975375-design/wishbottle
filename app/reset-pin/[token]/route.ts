@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAppBaseUrl, isSecureAppBaseUrl } from "@/lib/app-url";
+import { getPinResetTokenState } from "@/lib/pin-reset";
 import {
   createPinResetSessionValue,
   getPinResetSessionCookieOptions,
@@ -26,19 +27,30 @@ export async function GET(
   try {
     const baseUrl = getAppBaseUrl();
     const tokenHash = hashPinResetToken(token);
-    const now = new Date().toISOString();
     const supabase = getSupabaseAdmin();
     const { data: tokenRecord, error: tokenError } = await supabase
       .from("pin_reset_tokens")
       .select("wish_id, expires_at, used_at")
       .eq("token_hash", tokenHash)
-      .is("used_at", null)
-      .gt("expires_at", now)
       .maybeSingle<ResetTokenRow>();
 
-    if (tokenError || !tokenRecord) {
+    if (tokenError) {
+      console.error("[PIN Reset] Failed to load reset token", {
+        route: "/reset-pin/[token]",
+        errorCode: tokenError.code ?? null,
+        errorMessage: tokenError.message,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.redirect(
         new URL("/reset-pin?result=invalid", baseUrl),
+      );
+    }
+
+    const tokenState = getPinResetTokenState(tokenRecord);
+
+    if (!tokenRecord || tokenState !== "valid") {
+      return NextResponse.redirect(
+        new URL(`/reset-pin?result=${tokenState}`, baseUrl),
       );
     }
 
@@ -50,6 +62,15 @@ export async function GET(
       .maybeSingle<{ id: string; email_verified_at: string | null }>();
 
     if (wishError || !wish?.email_verified_at) {
+      if (wishError) {
+        console.error("[PIN Reset] Failed to load Wish for reset link", {
+          route: "/reset-pin/[token]",
+          errorCode: wishError.code ?? null,
+          errorMessage: wishError.message,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return NextResponse.redirect(
         new URL("/reset-pin?result=invalid", baseUrl),
       );
@@ -64,7 +85,12 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error("Unexpected PIN reset link error:", error);
+    console.error("[PIN Reset] Unexpected reset link error", {
+      route: "/reset-pin/[token]",
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      errorMessage: error instanceof Error ? error.message : "Unknown error.",
+      timestamp: new Date().toISOString(),
+    });
 
     try {
       return NextResponse.redirect(
@@ -78,4 +104,3 @@ export async function GET(
     }
   }
 }
-

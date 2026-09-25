@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+import { MAX_WISH_CONTENT_LENGTH } from "@/lib/wish-journey";
+
 type ReturnedWish = {
   id: string;
   wish_code: string;
@@ -309,12 +311,14 @@ export function WishReturnView() {
           <textarea
             className="textarea wish-textarea"
             id="returned-wish-content"
-            maxLength={200}
+            maxLength={MAX_WISH_CONTENT_LENGTH}
             onChange={(event) => setWishContent(event.target.value)}
             rows={4}
             value={wishContent}
           />
-          <p className="character-count">{wishContent.length} / 200</p>
+          <p className="character-count">
+            {wishContent.length} / {MAX_WISH_CONTENT_LENGTH}
+          </p>
         </div>
 
         <fieldset className="choice-fieldset">

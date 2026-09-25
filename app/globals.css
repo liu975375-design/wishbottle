@@ -794,6 +794,563 @@ h3 {
   text-align: left;
 }
 
+.wish-saved-animation {
+  position: relative;
+  max-width: 460px;
+  margin: -16px auto 0;
+}
+
+.wish-animation-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.wish-saved-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.wish-coastal-wash {
+  opacity: 0.92;
+}
+
+.wish-coastal-horizon {
+  fill: none;
+  stroke: #d8c5b8;
+  stroke-linecap: round;
+  stroke-width: 1.1;
+  opacity: 0.42;
+}
+
+.wish-scene-shadow {
+  fill: #24384a;
+  opacity: 0.075;
+}
+
+#paperNote,
+#paperScroll,
+#cork,
+#charm,
+#savedMessage,
+#wishCode,
+.wish-sparkle-mark,
+.wish-sparkle-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+#paperNote,
+#paperScroll,
+#savedMessage,
+#wishCode,
+.wish-sparkle-mark,
+.wish-sparkle-dot {
+  visibility: hidden;
+  opacity: 0;
+}
+
+#cork {
+  transform: translate(5px, -28px) rotate(-2deg);
+}
+
+#charm {
+  transform: rotate(-2deg);
+  transform-origin: 50% 0%;
+}
+
+.wish-note-shadow {
+  fill: #4f3742;
+  opacity: 0.08;
+}
+
+.wish-note-paper {
+  stroke: #e4d3c2;
+  stroke-width: 1.2;
+}
+
+.wish-note-fold {
+  fill: #f0e2cf;
+  stroke: #ddc7b0;
+  stroke-linejoin: round;
+  stroke-width: 1.1;
+}
+
+.wish-note-rule {
+  fill: none;
+  stroke: #d9b7aa;
+  stroke-linecap: round;
+  stroke-width: 1.1;
+}
+
+.wish-paper-copy {
+  display: -webkit-box;
+  height: 100%;
+  overflow: hidden;
+  color: #314052;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.36;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.wish-scroll-shadow {
+  fill: #4f3742;
+  opacity: 0.09;
+}
+
+.wish-scroll-paper {
+  stroke: #dfccb8;
+  stroke-width: 1.2;
+}
+
+.wish-scroll-roll {
+  fill: #ead9c2;
+  stroke: #d1b99e;
+  stroke-width: 1;
+}
+
+.wish-scroll-crease {
+  fill: none;
+  stroke: #d6b5a5;
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.wish-scroll-ribbon {
+  stroke: #cf959c;
+  stroke-width: 0.7;
+}
+
+.wish-ribbon-tail {
+  fill: none;
+  stroke: #d69fa6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.2;
+}
+
+.wish-ribbon-knot {
+  fill: #dfa7ad;
+  stroke: #ca8f97;
+  stroke-width: 0.7;
+}
+
+.wish-scroll-motion-path {
+  stroke: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wish-bottle-glass-back {
+  stroke-width: 2.4;
+}
+
+.wish-bottle-mouth-inner {
+  fill: #94b3b2;
+  stroke: #ffffff;
+  stroke-width: 0.7;
+  opacity: 0.38;
+}
+
+.wish-bottle-contact-pool {
+  fill: #5f817f;
+  opacity: 0.12;
+}
+
+.wish-bottle-far-rim,
+.wish-bottle-far-rim-right {
+  fill: none;
+  stroke: #789d9c;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+  opacity: 0.34;
+}
+
+.wish-bottle-far-rim-right {
+  stroke-width: 1.5;
+  opacity: 0.24;
+}
+
+.wish-bottle-base-thickness {
+  fill: none;
+  stroke: #7fa5a4;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+  opacity: 0.4;
+}
+
+.wish-glass-inner-wall {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.62;
+  opacity: 0.22;
+}
+
+.wish-cork-side-shadow {
+  fill: none;
+  stroke: #8e6549;
+  stroke-linecap: round;
+  stroke-width: 2;
+  opacity: 0.34;
+}
+.wish-bottle-inner-shadow {
+  fill: none;
+  stroke: #8fb9b8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.8;
+  opacity: 0.28;
+}
+
+.wish-bottle-bottom-shadow {
+  fill: none;
+  stroke: #8dadac;
+  stroke-linecap: round;
+  stroke-width: 1.2;
+  opacity: 0.25;
+}
+
+.wish-bottle-glass-front {
+  fill: rgb(255 255 255 / 3%);
+  stroke: rgb(255 255 255 / 78%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.55;
+}
+
+.wish-coastal-sun {
+  fill: #edc6b4;
+  opacity: 0.17;
+}
+
+.wish-glass-wall-left,
+.wish-glass-wall-right,
+.wish-glass-inner-base,
+.wish-glass-inner-left {
+  fill: none;
+  stroke: #9fc1c1;
+  stroke-linecap: round;
+  opacity: 0.24;
+}
+
+.wish-glass-wall-left,
+.wish-glass-wall-right {
+  stroke-width: 0.72;
+}
+
+.wish-glass-inner-base,
+.wish-glass-inner-left {
+  stroke-width: 0.6;
+}
+
+.wish-glass-veil {
+  opacity: 0.44;
+}
+
+.wish-glass-caustic,
+.wish-glass-caustic-right {
+  fill: #f5d8d2;
+  opacity: 0.13;
+}
+
+.wish-glass-refraction {
+  fill: none;
+  stroke: #b8d0ce;
+  stroke-linecap: round;
+  stroke-width: 1.2;
+  opacity: 0.25;
+}
+
+.wish-cork-insertion-shadow {
+  fill: #5f817f;
+  opacity: 0.42;
+}
+
+.wish-scroll-glass-tint {
+  fill: #bed4d2;
+  opacity: 0.11;
+  pointer-events: none;
+}
+
+.wish-scroll-depth {
+  fill: none;
+  stroke: #8d7269;
+  stroke-linecap: round;
+  stroke-width: 0.9;
+  opacity: 0.16;
+}
+
+.wish-glass-depth-band {
+  fill: none;
+  stroke: #aac5c2;
+  stroke-linecap: round;
+  stroke-width: 7;
+  opacity: 0.16;
+}
+
+.wish-glass-edge-thickness {
+  fill: none;
+  stroke: #7d9e9d;
+  stroke-linecap: round;
+  stroke-width: 1.4;
+  opacity: 0.34;
+}
+
+.wish-glass-specular,
+.wish-glass-specular-right {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+}
+
+.wish-glass-specular {
+  stroke-width: 1.8;
+  opacity: 0.92;
+}
+
+.wish-glass-specular-right {
+  stroke-width: 1.2;
+  opacity: 0.62;
+}
+
+.wish-scroll-water-shadow {
+  fill: #31434a;
+  opacity: 0.1;
+}
+
+.wish-glass-body-tint {
+  opacity: 0.2;
+}
+
+.wish-twine-fiber {
+  fill: none;
+  stroke: #d6b487;
+  stroke-linecap: round;
+  stroke-width: 0.62;
+  opacity: 0.72;
+}
+
+.wish-cork-base-shadow {
+  fill: none;
+  stroke: #6c4f3e;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+  opacity: 0.38;
+}
+.wish-twine-highlight {
+  fill: none;
+  stroke: #ead5b1;
+  stroke-linecap: round;
+  stroke-width: 0.75;
+  opacity: 0.72;
+}
+
+.wish-twine-knot-highlight {
+  fill: #e5caa2;
+  opacity: 0.7;
+}
+
+.wish-charm-ring {
+  fill: none;
+  stroke: #d4a84e;
+  stroke-width: 0.8;
+}
+.wish-cork-contact-shadow {
+  fill: none;
+  stroke: #6e8f8d;
+  stroke-linecap: round;
+  stroke-width: 2.2;
+  opacity: 0;
+}
+
+.wish-glass-shine-left,
+.wish-glass-shine-right,
+.wish-glass-shoulder,
+.wish-glass-base,
+.wish-glass-neck-rim {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+}
+
+.wish-glass-shine-left {
+  stroke-width: 6;
+  opacity: 0.72;
+}
+
+.wish-glass-shine-right {
+  stroke-width: 3.2;
+  opacity: 0.5;
+}
+
+.wish-glass-shoulder {
+  stroke-width: 2.4;
+  opacity: 0.55;
+}
+
+.wish-glass-base {
+  stroke-width: 3.4;
+  opacity: 0.58;
+}
+
+.wish-glass-neck-rim {
+  stroke-width: 2.6;
+  opacity: 0.9;
+}
+
+.wish-twine-band,
+.wish-twine-knot,
+.wish-twine-tail,
+.wish-charm-string {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wish-twine-back-shadow,
+.wish-twine-band-shadow {
+  fill: none;
+  stroke: #715b42;
+  stroke-linecap: round;
+  opacity: 0.28;
+}
+
+.wish-twine-back-shadow {
+  stroke-width: 1.5;
+}
+
+.wish-twine-band-shadow {
+  stroke-width: 2;
+}
+
+.wish-twine-back {
+  fill: none;
+  stroke: #8e7454;
+  stroke-linecap: round;
+  stroke-width: 1.15;
+  opacity: 0.56;
+}
+
+.wish-twine-band {
+  stroke: #b49368;
+  stroke-width: 1.7;
+}
+
+.wish-twine-knot {
+  stroke: #a9845b;
+  stroke-width: 1.6;
+}
+
+.wish-twine-tail {
+  stroke: #b9976d;
+  stroke-width: 1.2;
+}
+
+.wish-charm-string {
+  stroke: #b9976d;
+  stroke-width: 1.1;
+}
+
+.wish-charm-shadow {
+  fill: #5b4f43;
+  opacity: 0.2;
+}
+
+.wish-charm-glint {
+  fill: #fff9df;
+  opacity: 0.9;
+}
+
+.wish-charm-star {
+  stroke: #b98a3f;
+  stroke-linejoin: round;
+  stroke-width: 0.8;
+}
+
+.wish-cork-shape {
+  stroke: #b98457;
+  stroke-width: 1;
+}
+
+.wish-cork-top {
+  fill: #efd2aa;
+  opacity: 0.85;
+}
+
+.wish-cork-grain {
+  fill: none;
+  stroke: #aa7850;
+  stroke-linecap: round;
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.wish-sparkle-mark {
+  fill: #e5b95f;
+}
+
+.wish-sparkle-dot {
+  fill: #d7a94d;
+}
+
+.wish-saved-title {
+  fill: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.wish-code-label {
+  fill: var(--navy-soft);
+  font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2.1px;
+  text-transform: uppercase;
+}
+
+.wish-code-value {
+  fill: var(--navy);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.wish-skip-button {
+  position: absolute;
+  z-index: 4;
+  top: 5px;
+  right: 5px;
+  min-height: 40px;
+  padding: 8px 15px;
+  border: 1px solid #d9c8bd;
+  border-radius: 999px;
+  background: rgb(255 253 249 / 94%);
+  color: var(--navy);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  touch-action: manipulation;
+  box-shadow: 0 3px 12px rgb(62 49 54 / 8%);
+}
+
+.wish-skip-button:hover,
+.wish-skip-button:focus-visible {
+  border-color: var(--coral);
+  color: var(--coral-dark);
+}
 .confirmation-heading {
   text-align: center;
 }
@@ -1201,5 +1758,39 @@ h3 {
 .custom-date-field {
   max-width: 22rem;
   margin-top: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #paperNote {
+    display: none !important;
+  }
+
+  #paperScroll {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translate(269px, 245px) rotate(-2deg) scale(0.72) !important;
+  }
+
+  #cork,
+  #charm {
+    transform: none !important;
+  }
+
+  .wish-sparkle-mark,
+  .wish-sparkle-dot {
+    visibility: visible !important;
+    opacity: 0.78 !important;
+    transform: none !important;
+  }
+
+  #savedMessage,
+  #wishCode {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .wish-skip-button {
+    display: none !important;
+  }
 }
 

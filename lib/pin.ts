@@ -36,13 +36,9 @@ function deriveKey(
   });
 }
 
-export async function hashPin(pin: string): Promise<string> {
-  if (!isValidPin(pin)) {
-    throw new Error("PIN must be 4 to 6 digits.");
-  }
-
+async function hashCredential(secret: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH);
-  const derivedKey = await deriveKey(pin, salt, SCRYPT_PARAMETERS);
+  const derivedKey = await deriveKey(secret, salt, SCRYPT_PARAMETERS);
 
   return [
     "scrypt",
@@ -54,14 +50,26 @@ export async function hashPin(pin: string): Promise<string> {
   ].join("$");
 }
 
-export async function verifyPin(
-  pin: string,
-  encodedHash: string,
-): Promise<boolean> {
+export async function hashPin(pin: string): Promise<string> {
   if (!isValidPin(pin)) {
-    return false;
+    throw new Error("PIN must be exactly 4 digits.");
   }
 
+  return hashCredential(pin);
+}
+
+export async function hashPinSetupToken(token: string): Promise<string> {
+  if (token.length < 32 || token.length > 256) {
+    throw new Error("PIN setup token is invalid.");
+  }
+
+  return hashCredential(token);
+}
+
+async function verifyCredential(
+  secret: string,
+  encodedHash: string,
+): Promise<boolean> {
   const parts = encodedHash.split("$");
 
   if (parts.length !== 6 || parts[0] !== "scrypt") {
@@ -94,7 +102,7 @@ export async function verifyPin(
       return false;
     }
 
-    const derivedKey = await deriveKey(pin, salt, {
+    const derivedKey = await deriveKey(secret, salt, {
       N,
       r,
       p,
@@ -105,4 +113,26 @@ export async function verifyPin(
   } catch {
     return false;
   }
+}
+
+export async function verifyPin(
+  pin: string,
+  encodedHash: string,
+): Promise<boolean> {
+  if (!isValidPin(pin)) {
+    return false;
+  }
+
+  return verifyCredential(pin, encodedHash);
+}
+
+export async function verifyPinSetupToken(
+  token: string,
+  encodedHash: string,
+): Promise<boolean> {
+  if (token.length < 32 || token.length > 256) {
+    return false;
+  }
+
+  return verifyCredential(token, encodedHash);
 }

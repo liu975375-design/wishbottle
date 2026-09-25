@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+
+import { SiteHeader } from "./components/SiteHeader";
 
 import "./globals.css";
+import "./phase1.css";
 
 export const metadata: Metadata = {
   title: "WishBottle",
@@ -11,7 +13,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#fff8f0",
+  viewportFit: "cover",
+  themeColor: "#fffaf4",
 };
 
 export default function RootLayout({
@@ -23,23 +26,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="site-shell">
-          <header className="site-header">
-            <Link className="brand" href="/">
-              <span aria-hidden="true" className="brand-heart">
-                ♡
-              </span>
-              WishBottle
-            </Link>
-            <nav aria-label="Primary navigation" className="site-nav">
-              <Link href="/create">Make a Wish</Link>
-              <Link href="/find">Find My Wish</Link>
-            </nav>
-          </header>
+          <SiteHeader />
           <main className="page">{children}</main>
           <footer className="site-footer">
             <p>
-              Small wishes.
-              <span> Brighter tomorrows.</span>
+              Small wishes. <span>Brighter tomorrows.</span>
             </p>
           </footer>
         </div>

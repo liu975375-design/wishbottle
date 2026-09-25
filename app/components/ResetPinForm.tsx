@@ -3,11 +3,32 @@
 import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 
+type ResetLinkState = "valid" | "expired" | "used" | "invalid";
+
 type ResetPinFormProps = {
-  invalidLink?: boolean;
+  linkState?: ResetLinkState;
 };
 
-export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
+const LINK_MESSAGES: Record<
+  Exclude<ResetLinkState, "valid">,
+  { heading: string; message: string }
+> = {
+  expired: {
+    heading: "This reset link has expired.",
+    message: "Please request a new one.",
+  },
+  used: {
+    heading: "This reset link has already been used.",
+    message:
+      "Please request a new one if you still need to reset your PIN.",
+  },
+  invalid: {
+    heading: "This reset link is not valid.",
+    message: "Please request a new reset link.",
+  },
+};
+
+export function ResetPinForm({ linkState = "valid" }: ResetPinFormProps) {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,13 +40,23 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
     value: string,
     setter: (nextValue: string) => void,
   ): void {
-    setter(value.replace(/\D/g, "").slice(0, 6));
+    setter(value.replace(/\D/g, "").slice(0, 4));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (submittingRef.current) {
+      return;
+    }
+
+    if (!/^\d{4}$/.test(newPin)) {
+      setError("PIN must be exactly 4 digits.");
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      setError("PINs do not match.");
       return;
     }
 
@@ -66,14 +97,14 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
     }
   }
 
-  if (invalidLink) {
+  if (linkState !== "valid") {
+    const content = LINK_MESSAGES[linkState];
+
     return (
       <div className="journey-card">
         <p className="eyebrow">PIN reset</p>
-        <h1>This reset link is not valid.</h1>
-        <p className="journey-lede">
-          The link may have expired or already been used.
-        </p>
+        <h1>{content.heading}</h1>
+        <p className="journey-lede">{content.message}</p>
         <Link className="button button-primary" href="/find">
           Find My Wish
         </Link>
@@ -85,9 +116,9 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
     return (
       <div className="journey-card">
         <p className="eyebrow">PIN updated</p>
-        <h1>Your new PIN is ready.</h1>
+        <h1>Your PIN has been reset.</h1>
         <p className="journey-lede">
-          You can now find your wish with your Wish Code and new PIN.
+          You can now use your new PIN to find your wish.
         </p>
         <Link className="button button-primary" href="/find">
           Find My Wish
@@ -99,10 +130,8 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
   return (
     <div className="journey-card">
       <p className="eyebrow">PIN reset</p>
-      <h1>Choose a new PIN</h1>
-      <p className="journey-lede">
-        Use 4–6 digits and confirm it below.
-      </p>
+      <h1>Reset your PIN</h1>
+      <p className="journey-lede">Choose a new 4-digit PIN.</p>
 
       <form className="form" onSubmit={handleSubmit} noValidate>
         <div className="field">
@@ -114,10 +143,10 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
             className="input"
             id="new-pin"
             inputMode="numeric"
-            maxLength={6}
+            maxLength={4}
             onChange={(event) => updatePin(event.target.value, setNewPin)}
-            pattern="[0-9]*"
-            placeholder="4 to 6 digits"
+            pattern="[0-9]{4}"
+            placeholder="Use 4 digits"
             type="password"
             value={newPin}
           />
@@ -125,16 +154,16 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
 
         <div className="field">
           <label className="label" htmlFor="confirm-new-pin">
-            Confirm new PIN
+            Confirm PIN
           </label>
           <input
             autoComplete="new-password"
             className="input"
             id="confirm-new-pin"
             inputMode="numeric"
-            maxLength={6}
+            maxLength={4}
             onChange={(event) => updatePin(event.target.value, setConfirmPin)}
-            pattern="[0-9]*"
+            pattern="[0-9]{4}"
             placeholder="Enter your new PIN again"
             type="password"
             value={confirmPin}
@@ -152,7 +181,7 @@ export function ResetPinForm({ invalidLink = false }: ResetPinFormProps) {
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Saving..." : "Save New PIN"}
+          {isSubmitting ? "Resetting..." : "Reset PIN"}
         </button>
       </form>
     </div>

@@ -1,3 +1,5 @@
+import { WISH_BOTTLE_PATH } from "./wishBottleArtwork";
+
 type WishBottleIllustrationProps = {
   className?: string;
 };
@@ -15,7 +17,7 @@ export function WishBottleIllustration({
       <rect className="bottle-cork" x="91" y="22" width="38" height="18" rx="8" />
       <path
         className="bottle-outline"
-        d="M89 40h42v20c0 9 5 16 15 25 14 12 21 29 21 49v79c0 17-14 31-31 31H84c-17 0-31-14-31-31v-79c0-20 7-37 21-49 10-9 15-16 15-25V40Z"
+        d={WISH_BOTTLE_PATH}
       />
       <rect className="bottle-note" x="75" y="132" width="70" height="58" rx="8" />
       <path
@@ -32,4 +34,3 @@ export function WishBottleIllustration({
     </svg>
   );
 }
-

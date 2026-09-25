@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { sendVerificationForWish } from "@/lib/email-verification-service";
+import { EmailProviderError } from "@/lib/email";
+import {
+  failedEmailVerificationResult,
+  sendVerificationForWish,
+} from "@/lib/email-verification-service";
 import { verifyPin } from "@/lib/pin";
 import {
   getSupabaseAdmin,
@@ -80,27 +84,53 @@ export async function POST(request: Request) {
     }
 
     if (wish.email_verified_at) {
-      return NextResponse.json({ alreadyVerified: true });
+      return NextResponse.json({
+        success: true,
+        emailVerification: {
+          required: true,
+          status: "already_verified",
+          verified: true,
+          sent: false,
+          cooldown: false,
+          retryable: false,
+        },
+      });
     }
 
     const result = await sendVerificationForWish({
+      apiRoute: "/api/email-verification/request",
       wishId: wish.id,
       email: wish.contact_email,
       name: wish.name,
     });
 
     return NextResponse.json({
+      success: true,
+      emailVerification: result,
       sent: result.sent,
       verified: result.verified,
       cooldown: result.cooldown,
     });
   } catch (error) {
+    if (error instanceof EmailProviderError) {
+      return NextResponse.json(
+        {
+          error: "Email verification could not be sent. Please try again.",
+          emailVerification: failedEmailVerificationResult(),
+        },
+        { status: 502 },
+      );
+    }
+
     if (!(error instanceof MissingSupabaseConfigError)) {
       console.error("Unexpected verification request error:", error);
     }
 
     return NextResponse.json(
-      { error: "Unable to send verification email." },
+      {
+        error: "Unable to send verification email.",
+        emailVerification: failedEmailVerificationResult(),
+      },
       { status: 503 },
     );
   }
